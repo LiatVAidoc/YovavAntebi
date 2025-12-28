@@ -15,12 +15,12 @@ test("validates S3 path format", async () => {
   const user = userEvent.setup();
   render(<App />);
 
-  await user.click(screen.getByRole("button", { name: /get metadata/i }));
-  expect(screen.getByText(/S3 path is required/i)).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: /open study/i }));
+  expect(screen.getByText(/Study file location is required/i)).toBeInTheDocument();
 
-  await user.type(screen.getByLabelText(/S3 path/i), "not-a-valid-path");
-  await user.click(screen.getByRole("button", { name: /get metadata/i }));
-  expect(screen.getByText("Use format: bucket-name/path/to/file.dcm")).toBeInTheDocument();
+  await user.type(screen.getByLabelText(/Study file location/i), "not-a-valid-path");
+  await user.click(screen.getByRole("button", { name: /open study/i }));
+  expect(screen.getByText(/Please paste the full study file location/i)).toBeInTheDocument();
 });
 
 test("calls backend and renders metadata table", async () => {
@@ -37,15 +37,16 @@ test("calls backend and renders metadata table", async () => {
   const user = userEvent.setup();
   render(<App />);
 
-  await user.type(screen.getByLabelText(/S3 path/i), "my-bucket/path/to/file.dcm");
-  await user.click(screen.getByRole("button", { name: /get metadata/i }));
+  await user.type(screen.getByLabelText(/Study file location/i), "my-bucket/path/to/file.dcm");
+  await user.click(screen.getByRole("button", { name: /open study/i }));
 
   await waitFor(() => {
     expect(axios.post).toHaveBeenCalledWith("/api/dicom-metadata", { s3Path: "my-bucket/path/to/file.dcm" });
   });
 
-  expect(await screen.findByText("PatientID")).toBeInTheDocument();
+  expect(await screen.findByText("Patient ID")).toBeInTheDocument();
   expect(screen.getByText("P123")).toBeInTheDocument();
-  expect(screen.getByText("20250101")).toBeInTheDocument();
+  // StudyDate is formatted YYYY-MM-DD in UI
+  expect(screen.getByText("2025-01-01")).toBeInTheDocument();
   expect(screen.getByText("CT")).toBeInTheDocument();
 });
